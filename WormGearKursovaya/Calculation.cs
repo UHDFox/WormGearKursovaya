@@ -20,6 +20,6 @@ public class Calculation
     public double X { get; set; }
     public double M { get; set; }
     public int InputParameterId { get; set; }
-    
+
     public InputParameters? InputParameter { get; set; }
 }

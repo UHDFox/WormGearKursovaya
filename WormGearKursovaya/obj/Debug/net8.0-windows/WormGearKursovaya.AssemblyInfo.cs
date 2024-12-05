@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WormGearKursovaya")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09ab8f58746c97a47ebc61d22e52a6f368231a88")]
 [assembly: System.Reflection.AssemblyProductAttribute("WormGearKursovaya")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WormGearKursovaya")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -2,14 +2,16 @@
 
 public partial class MainForm : System.Windows.Forms.Form
     {
-        private TextBox txtQ, txtSigmaHP, txtEfficiency, txtPowerN1, txtMaterial, txtSigmaFP;
-        private TextBox txtAW, txtD2, txtX, txtM;
-        private ComboBox cmbZ2, cmbZ1;
+        private TextBox txtQ, txtSigmaHP, txtEfficiency, txtPowerN1, txtSigmaFP;
+        private TextBox txtAW, txtD2, txtX, txtM, eqCycleTime;
+        private ComboBox cmbZ2, cmbZ1, cmbMat;
         private Button btnCalculate;
         private ToolTip toolTip;
         
         private List<Double> z2Values = new List<Double>(){ 20, 24, 26, 28, 30, 32, 35, 37, 40, 45, 50, 60, 80, 100, 150 };
         private List<double> z1Values = new List<double>() { 1, 2, 3, 4 };
+        private List<string> materials = new List<string>() { "латунь", "бронза", "чугун"};
+
         
         private void InitializeComponent()
         {
@@ -21,7 +23,7 @@ public partial class MainForm : System.Windows.Forms.Form
             toolTip = new ToolTip();
 
             // Вводные данные
-            var groupBoxInput = CreateGroupBox("Вводные данные", 20, 1, 600, 300);
+            var groupBoxInput = CreateGroupBox("Вводные данные", 20, 1, 600, 400);
 
             var labelZ2 = CreateLabel("Количество зубьев червячного колеса z2:", 20, 20);
             cmbZ2 = CreateComboBox(400, 20, z2Values);
@@ -50,31 +52,42 @@ public partial class MainForm : System.Windows.Forms.Form
             /*var labelMaterial = CreateLabel("Название материала:", 20, 260);
             txtMaterial = CreateTextBox(400, 260);
             toolTip.SetToolTip(txtMaterial, "Введите название материала");*/
+            var labelMaterial = CreateLabel("Материал:", 20, 260);
+            cmbMat = CreateComboBox(400, 260, materials);
+            toolTip.SetToolTip(cmbMat, "Выберите материал");
 
-            var labelSigmaFP = CreateLabel("Предел прочности материала σFP:", 20, 260);
-            txtSigmaFP = CreateTextBox(400, 260);
+            var labelSigmaFP = CreateLabel("Предел прочности материала σFP:", 20, 300);
+            txtSigmaFP = CreateTextBox(400, 300);
             toolTip.SetToolTip(txtSigmaFP, "Введите предел прочности материала");
+            
+            
+            
+            var labelCycleTime = CreateLabel("Время эквивалентного числа циклов  Tч:", 20, 340);
+            eqCycleTime = CreateTextBox(400, 340);
+            toolTip.SetToolTip(eqCycleTime, "Время эквивалентного числа циклов  Tч");
+            
+
 
             groupBoxInput.Controls.AddRange(new Control[]
             {
                 labelZ2, cmbZ2, labelZ1, cmbZ1, labelQ, txtQ, labelSigmaHP, txtSigmaHP,
-                labelEfficiency, txtEfficiency, labelPowerN1, txtPowerN1, txtMaterial,
-                labelSigmaFP, txtSigmaFP
+                labelEfficiency, txtEfficiency, labelPowerN1, txtPowerN1,
+                labelSigmaFP, txtSigmaFP, cmbMat, labelMaterial, labelCycleTime, eqCycleTime
             });
 
             // Результаты расчётов
-            var groupBoxResults = CreateGroupBox("Результаты расчётов", 20, 400, 600, 230);
+            var groupBoxResults = CreateGroupBox("Результаты расчётов", 20, 440, 600, 300);
 
-            var labelAW = CreateLabel("Межосевое расстояние aw:", 20, 20);
+            var labelAW = CreateLabel("Межосевое расстояние aw:", 20, 30);
             txtAW = CreateTextBox(400, 20, true);
 
-            var labelD2 = CreateLabel("Делительный диаметр колеса d2:", 20, 60);
+            var labelD2 = CreateLabel("Делительный диаметр колеса d2:", 20, 70);
             txtD2 = CreateTextBox(400, 60, true);
 
-            var labelX = CreateLabel("Коэффициент смещения x:", 20, 100);
+            var labelX = CreateLabel("Коэффициент смещения x:", 20, 110);
             txtX = CreateTextBox(400, 100, true);
 
-            var labelM = CreateLabel("Модуль по изгибу m:", 20, 140);
+            var labelM = CreateLabel("Модуль по изгибу m:", 20, 150);
             txtM = CreateTextBox(400, 140, true);
 
             groupBoxResults.Controls.AddRange(new Control[]
@@ -86,7 +99,7 @@ public partial class MainForm : System.Windows.Forms.Form
             btnCalculate = new Button
             {
                 Text = "Рассчитать",
-                Location = new Point(20, 320),
+                Location = new Point(20, 400),
                 Size = new Size(150, 40),
                 BackColor = Color.SteelBlue,
                 ForeColor = Color.White,
@@ -121,6 +134,8 @@ public partial class MainForm : System.Windows.Forms.Form
                 double Nefficiency = ValidateDoubleInput(txtEfficiency, "Коэффициент полезного действия передачи n");
                 double powerN1 = ValidateDoubleInput(txtPowerN1, "Мощность на валу N1");
                 double sigmaFP = ValidateDoubleInput(txtSigmaFP, "Предел прочности материала σFP");
+                string material = ValidateMaterialInput(cmbMat, "Материал", materials);
+                var t = ValidateIntInput(eqCycleTime, "Время квивалентного числа циклов t");
 
                 var Yf = YfValues[z2Values.IndexOf(z2)];
                 var n = nValues[z1Values.IndexOf(z1)];
@@ -130,6 +145,19 @@ public partial class MainForm : System.Windows.Forms.Form
                 var aw = CalculateAw(z2, q, T2_i, sigmaHP);
                 var m = CalculateModule(Yf, T2_i, z2, q, sigmaFP);
                 var x = CalculateX(aw, m, q, z2);
+                double kfl = 0;
+                
+                var rand = new Random();
+                switch (material)
+                {
+                    case "бронза":
+                        case "латунь":
+                            kfl = rand.NextDouble(0.54, 1);
+                            break;
+                    case "чугун":
+                        kfl = 1;
+                        break;
+                }
 
                 // Вывод результатов
                 txtAW.Text = aw.ToString("F2");
@@ -139,45 +167,35 @@ public partial class MainForm : System.Windows.Forms.Form
                 
                 
                 
-                using (var db = new DbManager())
+
+                using (var database = new DbManager())
                 {
+                    var detail = new Detail
+                    {
+                        Aw = aw,
+                        Kfl = kfl,
+                        M = m,
+                        N = n,
+                        N1 = powerN1,
+                        SigmaHP = sigmaHP,
+                        Z2 = z2,
+                        Z1 = z1,
+                        X = x,
+                        T2 = T2_i
+                    };
+
+                    var constructionUnit = new ConstructionUnit
+                    {
+                        Aw = aw,
+                        Kfl = kfl,
+                        N = n,
+                        X = x
+                    };
                     
-                        // Создаем новый объект InputParameters
-                        var inputParams = new InputParameters
-                        {
-                            Z2 = z2,
-                            Z1 = z1,
-                            Q = q,
-                            SigmaHP = sigmaHP,
-                            Efficiency = Nefficiency,
-                            PowerN1 = powerN1,
-                            SigmaFP = sigmaFP
-                        };
-
-                        // Добавляем InputParameters в базу данных
-                        db.InputParameters.Add(inputParams);
-
-                        // Сохраняем изменения и получаем Id
-                        db.SaveChanges();
-                    
-                        // Создаем новый объект Calculation и связываем с InputParameters
-                        var calculation = new Calculation
-                        {
-                            CalculationDate = DateTimeOffset.Now,
-                            Aw = aw,
-                            D2 = d2,
-                            X = x,
-                            M = m,
-                            InputParameterId = inputParams.Id // Здесь получаем Id только что добавленного объекта
-                        };
-
-                        // Добавляем Calculation в базу данных
-                        db.Calculations.Add(calculation);
-
-                        // Сохраняем изменения
-                        db.SaveChanges();
-                    }
-                
+                    database.ConstructionUnits.Add(constructionUnit);
+                    database.Details.Add(detail);
+                    database.SaveChanges();
+                }
             }
             catch (Exception ex)
             {
@@ -238,6 +256,25 @@ public partial class MainForm : System.Windows.Forms.Form
             return comboBox;
         }
         private ComboBox CreateComboBox(int x, int y, List<double> values)
+        {
+            var comboBox = new ComboBox
+            {
+                Location = new Point(x, y),
+                Width = 200,
+                Font = new Font("Segoe UI", 10),
+                DropDownStyle = ComboBoxStyle.DropDown // Позволяет вводить вручную
+            };
+
+            // Добавляем значения в ComboBox
+            foreach (var value in values)
+            {
+                comboBox.Items.Add(value);
+            }
+
+            return comboBox;
+        }
+        
+        private ComboBox CreateComboBox(int x, int y, List<string> values)
         {
             var comboBox = new ComboBox
             {
@@ -330,5 +367,27 @@ public partial class MainForm : System.Windows.Forms.Form
                 throw new ArgumentException($"Ошибка ввода в поле '{fieldName}': введите корректное число с плавающей точкой.");
             }
         }
+        private string ValidateMaterialInput(ComboBox comboBox, string fieldName, List<string> validMaterials)
+        {
+            try
+            {
+                string selectedMaterial = comboBox.Text.Trim().ToLower(); // Убираем лишние пробелы и приводим к нижнему регистру
+                if (validMaterials.Contains(selectedMaterial))
+                {
+                    return selectedMaterial;
+                }
+                else
+                {
+                    throw new ArgumentException($"Ошибка ввода в поле '{fieldName}': выберите материал из списка.");
+                }
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException($"Ошибка ввода в поле '{fieldName}': выберите материал из списка.");
+            }
+        }
+        
+        
+
     }
     
